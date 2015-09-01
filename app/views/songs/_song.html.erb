@@ -1,0 +1,12 @@
+ <tr class='song-row' >
+  
+  <td onclick="location.href='<%= edit_song_path(song) %>'" onmouseover="" style="cursor: pointer;">
+    <img src="<%= "/a/#{song.cover_art}" %>" alt="Img not found" width="50" >
+  </td>
+	<td><%= check_box_tag "song_ids[]", song.id%></td>
+  <td onclick="location.href='<%= edit_song_path(song) %>'" onmouseover="" style="cursor: pointer;"><%= song.title.truncate(35) %></td>
+  <td onclick="location.href='<%= edit_song_path(song) %>'" onmouseover="" style="cursor: pointer;"><%= song.artist.truncate(18) %></td>    
+  <td onclick="location.href='<%= edit_song_path(song) %>'" onmouseover="" style="cursor: pointer;"><%= song.album.truncate(22) %></td>
+  <td onclick="location.href='<%= edit_song_path(song) %>'" onmouseover="" style="cursor: pointer;"><%= song.genre.truncate(18) %></td>
+  <td onclick="location.href='<%= edit_song_path(song) %>'" onmouseover="" style="cursor: pointer;"><%= ((song.file_size)/1000000.00).round(2) %> MB </td>
+</tr>

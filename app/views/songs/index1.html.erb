@@ -1,0 +1,45 @@
+<p id="notice"><%= notice %></p>
+onclick="location.href='<%= edit_song_path(song) %>'"
+onclick="location.href='<%= edit_song_path(song) %>'"
+onclick="location.href='<%= edit_song_path(song) %>'"
+onclick="location.href='<%= edit_song_path(song) %>'" onmouseover="" style="cursor: pointer;"
+<h1>Listing Songs</h1>
+<div id="song">
+<table>
+  <thead>
+    <tr>
+      <th colspan="1"></th>
+      <th>Title</th>
+      <th>Artist</th>
+      <th>Genre</th>
+      <th colspan="3"></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @songs.sort { |a,b| a.title <=> b.title}.each do |song| %>
+      <tr>
+        <td><%= check_box_tag("delete[#{song.id}]",1) %></td>
+        <td><img src=<%= "/directories/#{song.directory}/#{song.cover_art}" %> alt="" width=50></td>
+        <td></td>
+        <td><%= song.title.truncate(31) %></td>
+        <td><%= song.artist.truncate(18) %></td>
+        <td><%= song.genre.truncate(18) %></td>
+        <td><%= link_to 'Show', song %></td>
+        <td><%= link_to 'Edit', edit_song_path(song) %></td>
+        <td><%= link_to 'Destroy', song, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<br>
+</div>
+<%= form_for Song.new do |f| %>
+  <%= f.label :file, "Upload Songs: " %>
+  <%= f.file_field :file, multiple: true, name: "song[file]" %>
+<% end %>
+
+<br>
+
+<%= link_to 'New Song', new_song_path %>

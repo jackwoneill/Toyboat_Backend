@@ -1,0 +1,28 @@
+# Place all the behaviors and hooks related to the matching controller here.
+# All this logic will automatically be available in application.js.
+# You can use CoffeeScript in this file: http://coffeescript.org/
+$('tr[data-link]').click ->
+  window.location = @data('link')
+  return
+
+jQuery ->
+  $('#song_album').autocomplete
+    source: $('#song_album').data('autocomplete-source')
+jQuery ->
+  $('#new_song').fileupload
+    dataType: "script"
+    add: (e, data) ->
+      types = /(\.|\/)(mp3|wav|m4a)$/i
+      file = data.files[0]
+      if types.test(file.type) || types.test(file.name)
+        data.context = $(tmpl("template-upload", file))
+        $('#new_song').append(data.context)
+        data.submit()
+      else
+        if (file.name != ".DS_Store")
+          alert("#{file.name} is not a MP3, WAV, or M4A audio file")
+    progress: (e, data) ->
+      if data.context
+        progress = parseInt(data.loaded / data.total * 100, 10)
+        data.context.find('.bar').css('width', progress + '%')
+

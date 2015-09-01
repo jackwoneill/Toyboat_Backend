@@ -1,0 +1,10 @@
+
+<% if @song.new_record? %>
+
+	alert("Failed to upload song: <%= j @song.errors.full_messages.join(',').html %>");
+<% else %>
+
+	//$("#songs").append("<%= j render(@song) %>");]
+	$("#songs").append("<h3>Processing <%= @song.title %><h3>")
+	location.reload();
+<% end %>

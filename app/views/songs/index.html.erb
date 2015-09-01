@@ -1,0 +1,38 @@
+<div id="songs">
+	<% if @songs.count != 0 %>
+		<%= form_tag destroy_multiple_songs_path, method: :delete do %>
+		<table>
+			<thead>
+				<tr>
+					<th colspan="1"></th>
+					<th>Title</th>
+					<th>Artist</th>
+				</tr>
+			</thead>
+			<tbody>
+				<%= render @songs %>
+			</tbody>
+		</table>
+			<% if @songs.count != 0 %>
+				<%= submit_tag "Delete Checked" %>
+			<% end %>
+		<% end %>
+	<% else %>
+		<h3>Whoa! It's looking pretty empty in here!</h3>
+		<p>To upload songs, simply drag and drop them anywhere on this page, or click the "Choose Files" button instead</p>
+	<% end %>
+</div>
+<br>
+<%= @fileSizeSum %>
+<%= form_for Song.new do |f| %>
+  <%= f.label :file, "Upload Songs: " %>
+  <%= f.file_field :file, multiple: true, name: "song[file]" %>
+<% end %>
+<%= (current_user.total_file_size / 1000000.0).round(2) %> MB
+
+<script id="template-upload" type="text/x-tmpl">
+<div class="upload">
+  {%=o.name%}
+  <div class="progress"><div class="bar" style="width: 0%"></div></div>
+</div>
+</script>
