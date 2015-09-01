@@ -26,7 +26,7 @@ gem 'devise'
 
 gem 'carrierwave'
 
-gem 'taglib-ruby'
+gem 'taglib-ruby', github: 'robinst/taglib-ruby', ref: 'b38340df0522a686cbfec33988d9cfe557be31fb'
 
 gem 'omniauth'
 
