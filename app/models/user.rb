@@ -8,6 +8,9 @@ class User < ActiveRecord::Base
 
   after_create :register_hook
 
+  before_create do |doc|
+    doc.api_key = doc.generate_api_key
+  end
 
   def register_hook
     self.total_file_size = 0
@@ -23,4 +26,11 @@ class User < ActiveRecord::Base
     end
 
   end
+
+  def generate_api_key
+  loop do
+    token = SecureRandom.base64.tr('+/=', 'Qrt')
+    break token unless User.exists?(api_key: token).any?
+  end
+end
 end

@@ -1,4 +1,13 @@
 Rails.application.routes.draw do
+
+  namespace :api, defaults: {format: 'json'} do
+    namespace :v1 do
+      resources :songs
+    end
+  end
+
+
+
   get 'welcome/index'
   resources :songs do
     collection do
@@ -8,6 +17,12 @@ Rails.application.routes.draw do
   devise_for :users
 
   root 'welcome#index'
+
+  #namespace :v2 do
+   # resources :users
+  #end
+ # match 'v:api/*path', :to => redirect("/api/v2/%{path}")
+ # match '*path', :to => redirect("/api/v2/%{path}")
 
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
