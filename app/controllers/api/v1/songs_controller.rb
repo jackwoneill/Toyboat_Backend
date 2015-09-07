@@ -12,6 +12,10 @@ module Api
       end
 
       def destroy
+        respond_with @song do |format|
+          @song.destroy
+        end
+
         print "im trying to delete"
         # if !@song.cover_art.nil? && @song.cover_art != "public/a/defaultImg.png"
         #   sl = Song.where(:directory => current_user.user_directory)
@@ -25,8 +29,6 @@ module Api
         #end
         #File.delete("public#{@song.file}")
         #@song.destroy
-        @song.id = 12345
-        @song.save
       end
     end
   end
