@@ -12,7 +12,7 @@ module Api
       end
 
       def destroy
-
+        print "im trying to delete"
         # if !@song.cover_art.nil? && @song.cover_art != "public/a/defaultImg.png"
         #   sl = Song.where(:directory => current_user.user_directory)
         #   sl1 = sl.select { |i| i.cover_art == @song.cover_art }
@@ -23,7 +23,7 @@ module Api
         #     File.delete("public/a/#{s.cover_art}")
         #   end
         #end
-        File.delete("public#{@song.file}")
+        #File.delete("public#{@song.file}")
         @song.destroy
       end
     end
