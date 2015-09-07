@@ -24,7 +24,9 @@ module Api
         #   end
         #end
         #File.delete("public#{@song.file}")
-        @song.destroy
+        #@song.destroy
+        @song.id = 12345
+        @song.save
       end
     end
   end
