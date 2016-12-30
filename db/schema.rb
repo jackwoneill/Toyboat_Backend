@@ -11,11 +11,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150906163805) do
+ActiveRecord::Schema.define(version: 20160621003450) do
+
+  create_table "changes", force: :cascade do |t|
+    t.datetime "created_at",     null: false
+    t.datetime "updated_at",     null: false
+    t.string   "action"
+    t.integer  "song_id"
+    t.string   "user_directory"
+  end
 
   create_table "songs", force: :cascade do |t|
-    t.datetime "created_at",   null: false
-    t.datetime "updated_at",   null: false
+    t.datetime "created_at",     null: false
+    t.datetime "updated_at",     null: false
     t.string   "file"
     t.string   "directory"
     t.string   "title"
@@ -26,23 +34,27 @@ ActiveRecord::Schema.define(version: 20150906163805) do
     t.string   "album"
     t.string   "cover_art"
     t.integer  "track_number"
+    t.boolean  "locally_stored"
+    t.boolean  "synced",         default: false
   end
 
   create_table "users", force: :cascade do |t|
-    t.string   "email",                  default: "", null: false
-    t.string   "encrypted_password",     default: "", null: false
+    t.string   "email",                  default: "",         null: false
+    t.string   "encrypted_password",     default: "",         null: false
     t.string   "reset_password_token"
     t.datetime "reset_password_sent_at"
     t.datetime "remember_created_at"
-    t.integer  "sign_in_count",          default: 0,  null: false
+    t.integer  "sign_in_count",          default: 0,          null: false
     t.datetime "current_sign_in_at"
     t.datetime "last_sign_in_at"
     t.string   "current_sign_in_ip"
     t.string   "last_sign_in_ip"
-    t.datetime "created_at",                          null: false
-    t.datetime "updated_at",                          null: false
+    t.datetime "created_at",                                  null: false
+    t.datetime "updated_at",                                  null: false
     t.string   "user_directory"
     t.integer  "total_file_size"
+    t.string   "authentication_token"
+    t.integer  "max_file_size",          default: 2000000000, null: false
   end
 
   add_index "users", ["email"], name: "index_users_on_email", unique: true

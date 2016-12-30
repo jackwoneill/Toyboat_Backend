@@ -7,7 +7,6 @@ class SongsController < ApplicationController
   before_filter :authenticate_user!
   before_action :set_song, only: [:show, :edit, :update, :destroy]
 
-
   #Get the following info for each file uploaded
     # Title
     # Artist
@@ -31,7 +30,8 @@ class SongsController < ApplicationController
     end
     # BEGIN EXISTING ARTWORK DETECTION
 
-    #Check if the album already exists, if so, use same artwork
+    # Check if the album already exists, if so, use same artwork
+    # TODO Clean this up...this is horrific
     if Song.count > 1
       sl = Song.where(:directory => current_user.user_directory)
       if sl.count > 1
@@ -71,18 +71,20 @@ class SongsController < ApplicationController
           image.resize "300x300"
         end
 
-        #Create UUID file name
+        # Attempt to create unique file name
         new_file_name = "artworks-#{SecureRandom.uuid}"
 
         #Ensure file name is not already taken
-        while Song.where(:cover_art =>new_file_name).count != 0
+        while Song.where(:cover_art => new_file_name).count != 0
           new_file_name = "artworks-#{SecureRandom.uuid}"
         end
 
+        # Change images to PNG format
         image.format "png"
         image.write "public/a/#{new_file_name}.png"
         image_optim = ImageOptim.new()
         image_optim.optimize_image("public/a/#{new_file_name}.png")
+
         File.delete(file_name + ".jpg")
 
         bn = File.basename("#{song.file}", File.extname("#{song.file}"))
@@ -101,7 +103,6 @@ class SongsController < ApplicationController
       end
     end
   end
-
 
   def index
     if user_signed_in?
@@ -134,12 +135,14 @@ class SongsController < ApplicationController
   # POST /songs.json
   def create
     @song = Song.create(new_song_params)
+    @song.locally_stored = false
     @song.directory = current_user.user_directory
     @song.file_size = 0
     getInfo(@song)
-    #why does this need to be moved? it shouldnt happen in the first place
+    # Why does this need to be moved? it shouldnt happen in the first place
     FileUtils.mv("public#{@song.file}", "public/directories/#{@song.directory}")
     handleFileSize(@song)
+    @song.synced = false
     @song.save
     current_user.save
   end
@@ -158,10 +161,27 @@ class SongsController < ApplicationController
 
 
           handleFileSize(@song)
+          @song.synced = false
           @song.save
           change_all_artwork(@song)
         end
-        #write_json(@song)
+
+        #@song.locally_stored = false
+        #HANDLE CHANGES
+        if @song.locally_stored == true 
+          c = Change.where(:song_id => @song.id).where.not(:action => "create")
+          if c.count != 0
+            c.destroy_all
+          end
+          change = Change.create()
+          change.user_directory = current_user.user_directory
+          change.action = "update"
+          change.song_id = @song.id
+          change.save
+          print("#{change.action}")
+        end
+        #END HANDLE CHANGES
+
         format.html { redirect_to songs_url, notice: 'Song was successfully updated.' }
         format.json { render :show, status: :ok, location: @song }
       else
@@ -170,7 +190,6 @@ class SongsController < ApplicationController
       end
     end
   end
-
 
   # DELETE /songs/1
   # DELETE /songs/1.json
@@ -201,10 +220,25 @@ class SongsController < ApplicationController
           File.delete("public/a/#{s.cover_art}")
         end
       end
+
+      #HANDLE CHANGES
+      if s.locally_stored == true   
+        c = Change.where(:song_id => s.id)
+        if c.count != 0
+          c.destroy_all
+        end
+
+        change = Change.create()
+        change.user_directory = current_user.user_directory
+        change.action = "delete"
+        change.song_id = s.id
+        change.save
+      end
+      #HANDLE CHANGES
+
       current_user.save
       s.destroy
     end
-    #Song.destroy_all(id: params[:song_ids])
     redirect_to songs_url
   end
 
@@ -215,9 +249,30 @@ class SongsController < ApplicationController
       song.save
       current_user.total_file_size += song.file_size
       current_user.save
+
+      if current_user.total_file_size > current_user.max_file_size
+
+        if !song.cover_art.nil? && song.cover_art != "public/a/defaultImg.png"
+          sl = Song.where(:directory => current_user.user_directory)
+          sl1 = sl.select { |i| i.cover_art == song.cover_art } ####
+          current_user.total_file_size -= File.size("public#{song.file}")
+          print "sl1Count = #{sl1.count}"
+
+        #if song is the only one using cover art, delete it
+          if sl1.count == 1
+            current_user.total_file_size -= File.size("public/a/#{song.cover_art}")
+            File.delete("public/a/#{song.cover_art}")
+          end
+        end
+        current_user.save
+        song.destroy
+      end
     end
 
     def change_all_artwork(song)
+
+      Song.where(count > 1).where(:directory => current_user.user_directory)\
+      
       if Song.count > 1
         sl = Song.where(:directory => current_user.user_directory)
         if sl.count > 1
@@ -248,27 +303,6 @@ class SongsController < ApplicationController
     end
 
     def song_params
-      params.require(:song).permit(:artwork, :title, :artist, :genre, :album)
+      params.require(:song).permit(:artwork, :title, :artist, :genre, :album, :synced)
     end
-
-    #DO THIS FASTER FOR CREATE() - set a boolean param, if true(create method, not update), only append to json 
-    #def write_json(song)
-     # songs_json = []
-
-      #Song.all.each do |s|
-       # song_json = {
-        #  "file" => s.file,
-         # "cover_art" => s.cover_art,
-          #{}"title" => s.title,
-          #{}"artist" => s.artist,
-          #{}"genre" => s.genre,
-        #} 
-        #songs_json << song_json
-      #end
-      #File.open("public/directories/#{song.directory}/songs.json","r+") do |f|
-       ## puts("public/directories/#{song.directory}/songs.json")
-        #f.write(songs_json.to_json)
-        #f.close
-      #end 
-  #end
 end

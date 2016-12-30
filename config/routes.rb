@@ -1,12 +1,20 @@
 Rails.application.routes.draw do
 
-  namespace :api, defaults: {format: 'json'} do
-    namespace :v1 do
-      resources :songs
+  resources :changes, except: [:new, :edit]
+  namespace :api do
+    api version: 1, module: 'v1' do
+      resources :sessions, only: [:create]
+      resources :songs, only: [:index, :show, :destroy]
+      get 'syncWithWeb', to: 'songs#syncWithWeb'
+      get 'songs/setInRealm'
+      get 'songs/setNotInRealm'
+      #delete 'songs/destroy'
+      resources :changes, only: [:index]
+      get 'changes/clear'
     end
   end
 
-
+  #resources :changes, only: [:index]
 
   get 'welcome/index'
   resources :songs do

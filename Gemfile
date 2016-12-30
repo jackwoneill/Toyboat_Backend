@@ -1,8 +1,10 @@
-source 'https://rubygems.org'
+source 'http://rubygems.org'
 
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '4.2.4'
+
+gem 'rocket_pants'
 
 gem 'rails-api'
 
@@ -42,6 +44,9 @@ gem 'image_optim_pack'
 gem 'jquery-fileupload-rails'
 
 gem 'jquery-ui-rails'
+gem "sprockets"
+
+gem "puma"
 
 
 # Use ActiveModel has_secure_password
