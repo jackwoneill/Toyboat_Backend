@@ -28,27 +28,22 @@ class SongsController < ApplicationController
         song.save
       end
     end
-    # BEGIN EXISTING ARTWORK DETECTION
 
     # Check if the album already exists, if so, use same artwork
-    # TODO Clean this up...this is horrific
-    if Song.count > 1
-      sl = Song.where(:directory => current_user.user_directory)
-      if sl.count > 1
-        sl1 = sl.select { |i| i.artist == song.artist }
-        if sl1.count > 1
-          sl2 = sl1.select {|i| i.album == song.album}
-          if sl2.count > 1
-            sl3 = sl2.select {|i| i.cover_art != "defaultImg.png"}
-            if sl3.count > 1
-              song.cover_art = sl3[0].cover_art
-              return
-            end
-          end
-        end
-      end
+    q = Song.where(:directory => current_user.user_directory)
+    q = q.where(:artist => song.artist)
+    q = q.where(:album => song.album)
+    q = q.where.not(:cover_art => "defaultImg.png")
+
+    q.each do |i|
+       puts i
     end
-    #END EXISTING ARTWORK DETECTION
+
+    if q.count >= 1
+      song.cover_art = q[0].cover_art
+      song.save
+      return
+    end
 
     TagLib::MPEG::File.open('public' + song.file_url) do |file|
       tag = file.id3v2_tag
@@ -66,6 +61,7 @@ class SongsController < ApplicationController
           f.write(picture)
         end
 
+        #Resize Image
         image = MiniMagick::Image.open(file_name + ".jpg")
         if image.dimensions != "[300, 300]"
           image.resize "300x300"
@@ -90,7 +86,6 @@ class SongsController < ApplicationController
         bn = File.basename("#{song.file}", File.extname("#{song.file}"))
 
           song.cover_art = new_file_name + ".png"
-          print song.cover_art
           song.save
 
           #Increase file size for song to account for new artwork file
@@ -159,28 +154,11 @@ class SongsController < ApplicationController
           current_user.total_file_size -= @song.file_size
           current_user.total_file_size += File.size("public/a/#{@song.cover_art}")
 
-
           handleFileSize(@song)
           @song.synced = false
           @song.save
           change_all_artwork(@song)
         end
-
-        #@song.locally_stored = false
-        #HANDLE CHANGES
-        if @song.locally_stored == true 
-          c = Change.where(:song_id => @song.id).where.not(:action => "create")
-          if c.count != 0
-            c.destroy_all
-          end
-          change = Change.create()
-          change.user_directory = current_user.user_directory
-          change.action = "update"
-          change.song_id = @song.id
-          change.save
-          print("#{change.action}")
-        end
-        #END HANDLE CHANGES
 
         format.html { redirect_to songs_url, notice: 'Song was successfully updated.' }
         format.json { render :show, status: :ok, location: @song }
@@ -209,32 +187,15 @@ class SongsController < ApplicationController
     songs = Song.find(params[:song_ids])
     songs.each do |s|
       if !s.cover_art.nil? && s.cover_art != "public/a/defaultImg.png"
-        sl = Song.where(:directory => current_user.user_directory)
-        sl1 = sl.select { |i| i.cover_art == s.cover_art } ####
+        sl = Song.where(:directory => current_user.user_directory).where(:cover_art => s.cover_art)
         current_user.total_file_size -= File.size("public#{s.file}")
-        print "sl1Count = #{sl1.count}"
 
         #if song is the only one using cover art, delete it
-        if sl1.count == 1
+        if sl.count == 1
           current_user.total_file_size -= File.size("public/a/#{s.cover_art}")
           File.delete("public/a/#{s.cover_art}")
         end
       end
-
-      #HANDLE CHANGES
-      if s.locally_stored == true   
-        c = Change.where(:song_id => s.id)
-        if c.count != 0
-          c.destroy_all
-        end
-
-        change = Change.create()
-        change.user_directory = current_user.user_directory
-        change.action = "delete"
-        change.song_id = s.id
-        change.save
-      end
-      #HANDLE CHANGES
 
       current_user.save
       s.destroy
@@ -253,13 +214,11 @@ class SongsController < ApplicationController
       if current_user.total_file_size > current_user.max_file_size
 
         if !song.cover_art.nil? && song.cover_art != "public/a/defaultImg.png"
-          sl = Song.where(:directory => current_user.user_directory)
-          sl1 = sl.select { |i| i.cover_art == song.cover_art } ####
+          sl = Song.where(:directory => current_user.user_directory).where(:cover_art => s.cover_art)
           current_user.total_file_size -= File.size("public#{song.file}")
-          print "sl1Count = #{sl1.count}"
 
         #if song is the only one using cover art, delete it
-          if sl1.count == 1
+          if sl.count == 1
             current_user.total_file_size -= File.size("public/a/#{song.cover_art}")
             File.delete("public/a/#{song.cover_art}")
           end
@@ -271,25 +230,15 @@ class SongsController < ApplicationController
 
     def change_all_artwork(song)
 
-      Song.where(count > 1).where(:directory => current_user.user_directory)\
-      
-      if Song.count > 1
-        sl = Song.where(:directory => current_user.user_directory)
-        if sl.count > 1
-          sl1 = sl.select { |i| i.artist == song.artist }
-          if sl1.count > 1
-            sl2 = sl1.select {|i| i.album == song.album}
-            if sl2.count > 1
-              sl2.each do |s|
-                if s.album != "Unknown Album"
-                  s.cover_art = song.cover_art
-                  s.save
-                end
-              end
-            end
-          end
-        end
+      q = Song.where(:directory => current_user.user_directory)
+      q = q.where(:artist => song.artist)
+      q = q.where(:album => song.album)
+      q = q.where.not(:cover_art => "defaultImg.png")
+
+      if q.count > 1
+        song.cover_art = q[0].cover_art
       end
+
     end
 
     # Use callbacks to share common setup or constraints between actions.
